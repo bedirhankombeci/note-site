@@ -11,7 +11,8 @@ import {
   X, 
   ThumbsUp, 
   Lightbulb, 
-  Rocket 
+  Rocket,
+  Lock
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -20,6 +21,7 @@ interface FeedbackDropdownProps {
   onClose: () => void;
   userEmail?: string;
   onShowToast: (message: string) => void;
+  onOpenSecretAdmin?: () => void;
 }
 
 export interface FeedbackEntry {
@@ -36,6 +38,7 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
   onClose,
   userEmail = '',
   onShowToast,
+  onOpenSecretAdmin,
 }) => {
   const { t, language } = useLanguage();
   const [type, setType] = useState<'suggestion' | 'bug' | 'praise' | 'feature'>('suggestion');
@@ -47,11 +50,9 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4RCH1rn0h4Rxi-DVFUaw44IGUdUkMD1CA3Aupyt6v4eQJhHUVOKkhuF8T-N9TRFrJKA/exec';
-
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) {
       onShowToast(language === 'tr' ? 'Lütfen geri bildirim mesajınızı yazın.' : 'Please write your feedback message.');
@@ -61,60 +62,35 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
     setIsSubmitting(true);
 
     try {
-      // 1. Send data to Google Apps Script Web App URL
-      const formData = new URLSearchParams();
-      formData.append('name', name.trim() || (language === 'tr' ? 'Ziyaretçi' : 'Visitor'));
-      formData.append('email', email.trim());
-      formData.append('message', message.trim());
-      formData.append('type', type);
-      formData.append('rating', rating.toString());
-
-      try {
-        await fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formData.toString(),
-        });
-      } catch (fetchErr) {
-        console.warn('Google Apps Script fetch executed with notice:', fetchErr);
-      }
-
-      // 2. Save locally as backup / history
+      // Save directly to localStorage as primary storage
       const newFeedback: FeedbackEntry = {
         id: 'fb-' + Date.now(),
         type,
         rating,
-        message,
-        email,
+        message: message.trim(),
+        email: email.trim() || (name.trim() ? `${name.trim()}` : ''),
         createdAt: Date.now(),
       };
 
-      try {
-        const existingStr = localStorage.getItem('app_user_feedback');
-        const existing: FeedbackEntry[] = existingStr ? JSON.parse(existingStr) : [];
-        existing.unshift(newFeedback);
-        localStorage.setItem('app_user_feedback', JSON.stringify(existing));
-      } catch (err) {
-        console.error('Feedback save error', err);
-      }
+      const existingStr = localStorage.getItem('app_user_feedback');
+      const existing: FeedbackEntry[] = existingStr ? JSON.parse(existingStr) : [];
+      existing.unshift(newFeedback);
+      localStorage.setItem('app_user_feedback', JSON.stringify(existing));
 
       setIsSubmitting(false);
       setIsSuccess(true);
-      onShowToast(language === 'tr' ? 'Geri bildiriminiz Google Sheets & Mail sistemine iletildi! ❤️' : 'Feedback sent to Google Sheets & Email! ❤️');
+      onShowToast(language === 'tr' ? 'Geri bildiriminiz başarıyla kaydedildi! ❤️' : 'Your feedback has been saved successfully! ❤️');
 
       setTimeout(() => {
         setIsSuccess(false);
         setMessage('');
         setName('');
         onClose();
-      }, 2500);
+      }, 1800);
     } catch (err) {
-      console.error('Submission error:', err);
+      console.error('Feedback save error:', err);
       setIsSubmitting(false);
-      onShowToast(language === 'tr' ? 'Gönderilirken bir hata oluştu, lütfen tekrar deneyin.' : 'An error occurred, please try again.');
+      onShowToast(language === 'tr' ? 'Kaydedilirken bir hata oluştu, lütfen tekrar deneyin.' : 'An error occurred while saving, please try again.');
     }
   };
 
@@ -174,9 +150,7 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
                 {t('feedbackSent')}
               </h4>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-xs mx-auto">
-                {language === 'tr'
-                  ? 'Değerli zamanınızı ayırıp görüşlerinizi paylaştığınız için çok teşekkür ederiz. 🚀'
-                  : 'Thank you very much for taking the time to share your feedback. 🚀'}
+                {t('feedbackSuccessDesc')}
               </p>
             </div>
           ) : (
@@ -295,6 +269,23 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
                   </>
                 )}
               </button>
+
+              {/* Discreet Admin Login Link */}
+              {onOpenSecretAdmin && (
+                <div className="pt-2 flex justify-center border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenSecretAdmin();
+                    }}
+                    className="text-[11px] font-medium text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Lock className="w-3 h-3 text-slate-400" />
+                    <span>{language === 'tr' ? 'Yönetici Girişi (Admin Paneli)' : 'Admin Login'}</span>
+                  </button>
+                </div>
+              )}
 
             </form>
           )}

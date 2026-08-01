@@ -698,6 +698,7 @@ export default function App() {
         onClose={() => setIsFeedbackModalOpen(false)}
         userEmail={currentUser.email}
         onShowToast={showToast}
+        onOpenSecretAdmin={() => setIsSecretAdminModalOpen(true)}
       />
 
     </div>
