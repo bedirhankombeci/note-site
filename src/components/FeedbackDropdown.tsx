@@ -174,9 +174,7 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
                 {t('feedbackSent')}
               </h4>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-xs mx-auto">
-                {language === 'tr'
-                  ? 'Değerli zamanınızı ayırıp görüşlerinizi paylaştığınız için çok teşekkür ederiz. 🚀'
-                  : 'Thank you very much for taking the time to share your feedback. 🚀'}
+                {t('feedbackSuccessDesc')}
               </p>
             </div>
           ) : (
