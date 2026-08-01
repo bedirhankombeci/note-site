@@ -69,13 +69,18 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
       formData.append('type', type);
       formData.append('rating', rating.toString());
 
-      await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData,
-      });
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString(),
+        });
+      } catch (fetchErr) {
+        console.warn('Google Apps Script fetch executed with notice:', fetchErr);
+      }
 
       // 2. Save locally as backup / history
       const newFeedback: FeedbackEntry = {
@@ -183,22 +188,22 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
                   {t('feedbackSubject')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {TYPES.map((t) => {
-                    const Icon = t.icon;
-                    const isSelected = type === t.id;
+                  {TYPES.map((item) => {
+                    const Icon = item.icon;
+                    const isSelected = type === item.id;
                     return (
                       <button
-                        key={t.id}
+                        key={item.id}
                         type="button"
-                        onClick={() => setType(t.id as any)}
+                        onClick={() => setType(item.id as any)}
                         className={`p-2.5 rounded-2xl border text-xs font-semibold flex items-center gap-2 transition-all ${
                           isSelected
-                            ? `${t.color} ring-2 ring-indigo-500 font-bold shadow-2xs scale-102`
+                            ? `${item.color} ring-2 ring-indigo-500 font-bold shadow-2xs scale-102`
                             : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
                         <Icon className="w-4 h-4 shrink-0" />
-                        <span>{t.label}</span>
+                        <span>{item.label}</span>
                       </button>
                     );
                   })}
