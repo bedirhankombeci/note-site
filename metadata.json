@@ -1,0 +1,6 @@
+{
+  "name": "Not Defteri",
+  "description": "Şık tasarımlı, etiket destekli ve yerel depolamalı not alma web uygulaması.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
