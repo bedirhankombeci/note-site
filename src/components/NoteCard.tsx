@@ -43,8 +43,45 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  
+  // Touch Swipe to Delete state
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [swipeOffsetX, setSwipeOffsetX] = useState<number>(0);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   const theme = COLOR_THEMES[note.color] || COLOR_THEMES.slate;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const currentX = e.touches[0].clientX;
+    const diffX = currentX - touchStartX;
+    // Only allow left swipe (negative diffX)
+    if (diffX < 0) {
+      setSwipeOffsetX(Math.max(diffX, -120));
+    } else {
+      setSwipeOffsetX(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsSwiping(false);
+    if (swipeOffsetX < -75) {
+      // Trigger delete action
+      if (note.isInTrash) {
+        onDeletePermanently(note.id);
+      } else {
+        onMoveToTrash(note.id);
+      }
+    }
+    // Reset offset with spring animation
+    setSwipeOffsetX(0);
+    setTouchStartX(null);
+  };
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,13 +121,31 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     : 0;
 
   return (
-    <div
-      onClick={() => !note.isInTrash && onEdit(note)}
-      id={`note-card-${note.id}`}
-      className={`group relative rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between ${theme.bg} ${theme.border} hover:shadow-md ${
-        viewMode === 'list' ? 'p-4 flex-col md:flex-row md:items-center gap-4' : 'p-5'
-      }`}
-    >
+    <div className="relative rounded-2xl overflow-hidden">
+      {/* Background Swipe Action Indicator (Revealed when swiping left) */}
+      <div className="absolute inset-0 bg-rose-600 dark:bg-rose-700 flex items-center justify-end pr-6 text-white font-bold text-xs gap-2 rounded-2xl">
+        <span className="text-[11px] uppercase tracking-wider">{language === 'tr' ? 'Sil' : 'Delete'}</span>
+        <Trash2 className="w-5 h-5 animate-pulse" />
+      </div>
+
+      {/* Main Interactive Card */}
+      <div
+        onClick={() => {
+          if (swipeOffsetX < -10) return; // ignore click if swiped
+          if (!note.isInTrash) onEdit(note);
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: `translateX(${swipeOffsetX}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
+        }}
+        id={`note-card-${note.id}`}
+        className={`group relative rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between ${theme.bg} ${theme.border} hover:shadow-md ${
+          viewMode === 'list' ? 'p-4 flex-col md:flex-row md:items-center gap-4' : 'p-5'
+        }`}
+      >
       
       {/* Top Banner Accent Line */}
       <div className={`absolute top-0 left-0 right-0 h-1.5 ${theme.dot}`} />
@@ -358,7 +413,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </div>
 
       </div>
-
     </div>
+  </div>
   );
 };

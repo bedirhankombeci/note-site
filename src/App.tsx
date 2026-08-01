@@ -486,7 +486,7 @@ export default function App() {
         />
 
         {/* Notes Grid / Content Panel */}
-        <main className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 pb-36 sm:pb-24 space-y-6 overflow-y-auto">
           
           {/* Trash Banner if in Trash mode */}
           {activeFilter === 'trash' && (

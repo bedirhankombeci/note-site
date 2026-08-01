@@ -270,23 +270,6 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
                 )}
               </button>
 
-              {/* Discreet Admin Login Link */}
-              {onOpenSecretAdmin && (
-                <div className="pt-2 flex justify-center border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose();
-                      onOpenSecretAdmin();
-                    }}
-                    className="text-[11px] font-medium text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <Lock className="w-3 h-3 text-slate-400" />
-                    <span>{language === 'tr' ? 'Yönetici Girişi (Admin Paneli)' : 'Admin Login'}</span>
-                  </button>
-                </div>
-              )}
-
             </form>
           )}
 
