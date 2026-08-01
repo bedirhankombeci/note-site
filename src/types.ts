@@ -71,12 +71,3 @@ export interface SystemStats {
   suspendedUsers: number;
 }
 
-export interface FeedbackEntry {
-  id: string;
-  type: 'suggestion' | 'feature' | 'praise' | 'bug';
-  rating: number;
-  message: string;
-  email?: string;
-  createdAt: number;
-}
-

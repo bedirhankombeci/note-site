@@ -104,12 +104,6 @@ export const translations = {
     feedbackSent: 'Geri Bildiriminiz Gönderildi!',
     feedbackSuccessTitle: 'Geri Bildiriminiz Gönderildi!',
     feedbackSuccessDesc: 'Değerli zamanınızı ayırıp görüşlerinizi paylaştığınız için teşekkür ederiz. 🚀',
-    adminFeedbackTab: 'Geri Bildirimler',
-    clearAllFeedbacks: 'Tümünü Temizle',
-    noFeedbacksFound: 'Henüz kaydedilmiş geri bildirim bulunmuyor.',
-    feedbackDeleted: 'Geri bildirim silindi.',
-    allFeedbacksCleared: 'Tüm geri bildirimler temizlendi.',
-    exportFeedbacks: 'Geri Bildirimleri İndir (JSON)',
 
     // Guide Modal
     guideTitle: 'Kullanım Kılavuzu & İpuçları',
@@ -234,12 +228,6 @@ export const translations = {
     feedbackSent: 'Feedback Received!',
     feedbackSuccessTitle: 'Feedback Received!',
     feedbackSuccessDesc: 'Thank you for taking the time to share your feedback with us! 🚀',
-    adminFeedbackTab: 'Feedbacks',
-    clearAllFeedbacks: 'Clear All',
-    noFeedbacksFound: 'No feedback items saved yet.',
-    feedbackDeleted: 'Feedback deleted.',
-    allFeedbacksCleared: 'All feedbacks cleared.',
-    exportFeedbacks: 'Export Feedbacks (JSON)',
 
     // Guide Modal
     guideTitle: 'Usage Guide & Helpful Tips',

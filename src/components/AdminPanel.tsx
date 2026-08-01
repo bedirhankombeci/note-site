@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   X, 
   Users, 
@@ -17,15 +17,9 @@ import {
   Flame,
   Shield,
   BarChart3,
-  RefreshCw,
-  MessageSquare,
-  Star,
-  Copy,
-  Check,
-  Mail,
-  Heart
+  RefreshCw
 } from 'lucide-react';
-import { User, Note, SystemStats, FeedbackEntry } from '../types';
+import { User, Note, SystemStats } from '../types';
 import { AuthService } from '../services/authService';
 
 interface AdminPanelProps {
@@ -45,83 +39,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onDeleteNoteByAdmin,
   onShowToast,
 }) => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'notes' | 'feedbacks' | 'settings'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'notes' | 'settings'>('stats');
   const [usersList, setUsersList] = useState<User[]>(() => AuthService.getUsers());
   const [userSearch, setUserSearch] = useState('');
   const [noteSearch, setNoteSearch] = useState('');
   const [allowRegistrations, setAllowRegistrations] = useState(true);
-
-  // Feedbacks state
-  const [feedbacks, setFeedbacks] = useState<FeedbackEntry[]>(() => {
-    try {
-      const saved = localStorage.getItem('app_user_feedback');
-      return saved ? JSON.parse(saved) : [];
-    } catch (err) {
-      return [];
-    }
-  });
-  const [feedbackSearch, setFeedbackSearch] = useState('');
-  const [feedbackTypeFilter, setFeedbackTypeFilter] = useState<string>('all');
-  const [copiedFeedbackId, setCopiedFeedbackId] = useState<string | null>(null);
-
-  // Sync feedbacks when tab becomes active or modal opens
-  useEffect(() => {
-    if (isOpen) {
-      try {
-        const saved = localStorage.getItem('app_user_feedback');
-        if (saved) {
-          setFeedbacks(JSON.parse(saved));
-        }
-      } catch (err) {}
-    }
-  }, [isOpen, activeTab]);
-
-  const reloadFeedbacks = () => {
-    try {
-      const saved = localStorage.getItem('app_user_feedback');
-      setFeedbacks(saved ? JSON.parse(saved) : []);
-      onShowToast('Geri bildirim listesi yenilendi.');
-    } catch (err) {}
-  };
-
-  const handleDeleteFeedback = (id: string) => {
-    if (window.confirm('Bu geri bildirimi silmek istediğinize emin misiniz?')) {
-      const updated = feedbacks.filter(f => f.id !== id);
-      setFeedbacks(updated);
-      localStorage.setItem('app_user_feedback', JSON.stringify(updated));
-      onShowToast('Geri bildirim silindi.');
-    }
-  };
-
-  const handleClearAllFeedbacks = () => {
-    if (window.confirm('Tüm geri bildirimleri tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz!')) {
-      setFeedbacks([]);
-      localStorage.removeItem('app_user_feedback');
-      onShowToast('Tüm geri bildirimler temizlendi.');
-    }
-  };
-
-  const handleExportFeedbacks = () => {
-    if (feedbacks.length === 0) {
-      onShowToast('Dışa aktarılacak geri bildirim bulunmuyor.');
-      return;
-    }
-    const blob = new Blob([JSON.stringify(feedbacks, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `not_defteri_geri_bildirimler_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    onShowToast('Geri bildirimler JSON olarak indirildi.');
-  };
-
-  const handleCopyMessage = (id: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedFeedbackId(id);
-    onShowToast('Geri bildirim mesajı kopyalandı.');
-    setTimeout(() => setCopiedFeedbackId(null), 2000);
-  };
 
   // New User Form modal inside Admin
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -291,27 +213,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           >
             <FileText className="w-4 h-4" />
             <span>Not Denetimi ({stats.totalNotes})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('feedbacks')}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all shrink-0 ${
-              activeTab === 'feedbacks'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            <div className="flex items-center gap-1.5">
-              <span>Geri Bildirimler</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                activeTab === 'feedbacks'
-                  ? 'bg-indigo-500 text-white'
-                  : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
-              }`}>
-                {feedbacks.length}
-              </span>
-            </div>
           </button>
 
           <button
@@ -624,231 +525,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {/* TAB 4: FEEDBACKS MANAGEMENT */}
-          {activeTab === 'feedbacks' && (
-            <div className="space-y-6">
-              
-              {/* Feedback Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Toplam Bildirim</span>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{feedbacks.length}</p>
-                    <MessageSquare className="w-5 h-5 text-indigo-500" />
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">Ortalama Puan</span>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">
-                      {feedbacks.length > 0 
-                        ? (feedbacks.reduce((acc, f) => acc + (f.rating || 5), 0) / feedbacks.length).toFixed(1)
-                        : '5.0'} ★
-                    </p>
-                    <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Öneri & Özellik</span>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                      {feedbacks.filter(f => f.type === 'suggestion' || f.type === 'feature').length}
-                    </p>
-                    <Heart className="w-5 h-5 text-emerald-500" />
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">Hata Bildirimleri</span>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">
-                      {feedbacks.filter(f => f.type === 'bug').length}
-                    </p>
-                    <AlertTriangle className="w-5 h-5 text-rose-500" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Bar & Search */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Mesaj veya e-posta içinde ara..."
-                      value={feedbackSearch}
-                      onChange={(e) => setFeedbackSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs rounded-xl border border-slate-200 dark:border-slate-700 outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <select
-                    value={feedbackTypeFilter}
-                    onChange={(e) => setFeedbackTypeFilter(e.target.value)}
-                    className="py-1.5 px-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 outline-none"
-                  >
-                    <option value="all">Tüm Konular</option>
-                    <option value="suggestion">💡 Öneri</option>
-                    <option value="feature">🚀 Yeni Özellik</option>
-                    <option value="bug">🐛 Hata Bildirimi</option>
-                    <option value="praise">❤️ Teşekkür</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5 justify-end shrink-0">
-                  <button
-                    onClick={reloadFeedbacks}
-                    type="button"
-                    title="Yenile"
-                    className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl transition-all"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    onClick={handleExportFeedbacks}
-                    type="button"
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-xs"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>JSON İndir</span>
-                  </button>
-
-                  {feedbacks.length > 0 && (
-                    <button
-                      onClick={handleClearAllFeedbacks}
-                      type="button"
-                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-xs"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Tümünü Temizle</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Feedbacks List */}
-              <div className="space-y-3">
-                {feedbacks.length === 0 ? (
-                  <div className="p-12 text-center bg-slate-50 dark:bg-slate-800/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl space-y-2">
-                    <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 flex items-center justify-center mx-auto">
-                      <MessageSquare className="w-6 h-6" />
-                    </div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">Henüz Geri Bildirim Yok</h4>
-                    <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                      Kullanıcılar "Geri Bildirim" butonundan mesaj gönderdiğinde tüm veriler doğrudan burada listelenir.
-                    </p>
-                  </div>
-                ) : (
-                  feedbacks
-                    .filter((f) => {
-                      const matchesSearch = 
-                        f.message.toLowerCase().includes(feedbackSearch.toLowerCase()) ||
-                        (f.email || '').toLowerCase().includes(feedbackSearch.toLowerCase());
-                      const matchesType = feedbackTypeFilter === 'all' || f.type === feedbackTypeFilter;
-                      return matchesSearch && matchesType;
-                    })
-                    .map((item) => {
-                      const typeBadge = {
-                        suggestion: { label: 'Öneri', bg: 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800', icon: '💡' },
-                        feature: { label: 'Yeni Özellik', bg: 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', icon: '🚀' },
-                        bug: { label: 'Hata Bildirimi', bg: 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800', icon: '🐛' },
-                        praise: { label: 'Teşekkür', bg: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', icon: '❤️' },
-                      }[item.type] || { label: 'Genel', bg: 'bg-slate-100 text-slate-700', icon: '💬' };
-
-                      return (
-                        <div 
-                          key={item.id}
-                          className="p-4 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl space-y-3 shadow-2xs hover:shadow-md transition-all relative group"
-                        >
-                          {/* Card Header */}
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700/60 pb-2.5">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${typeBadge.bg}`}>
-                                <span>{typeBadge.icon}</span>
-                                <span>{typeBadge.label}</span>
-                              </span>
-
-                              {/* Star Rating */}
-                              <div className="flex items-center gap-0.5">
-                                {[1, 2, 3, 4, 5].map((s) => (
-                                  <Star
-                                    key={s}
-                                    className={`w-3.5 h-3.5 ${
-                                      s <= (item.rating || 5)
-                                        ? 'text-amber-400 fill-amber-400'
-                                        : 'text-slate-200 dark:text-slate-700'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-
-                            <span className="text-[11px] font-medium text-slate-400">
-                              {new Date(item.createdAt).toLocaleString('tr-TR', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-
-                          {/* Message Body */}
-                          <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-normal whitespace-pre-wrap">
-                            {item.message}
-                          </p>
-
-                          {/* Card Footer */}
-                          <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
-                            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium">
-                              <Mail className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{item.email || 'Ziyaretçi (E-posta belirtilmedi)'}</span>
-                            </div>
-
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => handleCopyMessage(item.id, item.message)}
-                                className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-1 text-[11px]"
-                                title="Mesajı Kopyala"
-                              >
-                                {copiedFeedbackId === item.id ? (
-                                  <>
-                                    <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                    <span className="text-emerald-500 font-bold">Kopyalandı</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="w-3.5 h-3.5" />
-                                    <span>Kopyala</span>
-                                  </>
-                                )}
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteFeedback(item.id)}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors"
-                                title="Geri Bildirimi Sil"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 5: SETTINGS & EXPORT */}
+          {/* TAB 4: SETTINGS & EXPORT */}
           {activeTab === 'settings' && (
             <div className="space-y-6 max-w-2xl">
               <div className="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-4">
