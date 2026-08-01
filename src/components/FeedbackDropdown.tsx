@@ -71,7 +71,6 @@ export const FeedbackDropdown: React.FC<FeedbackDropdownProps> = ({
 
       await fetch(SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
